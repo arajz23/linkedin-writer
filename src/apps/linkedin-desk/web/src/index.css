@@ -1,0 +1,98 @@
+@import '@lua-ai-global/ui/styles.css';
+/* The agent pane's styles: after the design system's, on its tokens. */
+@import '@lua-ai-global/app-chat/styles.css';
+/* Tailwind scans the design system's compiled components for the classes they use. */
+@source '../node_modules/@lua-ai-global/ui/dist';
+
+/* One accent (LinkedIn blue) and three status colours. The shell toggles `dark` on <html>. Everything else comes
+   from the design system's tokens, so the page stays calm in both themes. */
+:root {
+  --accent: #0a66c2;
+  --accent-soft: color-mix(in oklab, var(--accent) 10%, var(--card));
+  --status-good: #0ca30c;
+  --status-warning: #d98f0b;
+  --status-critical: #d03b3b;
+  --paper: #fffdf8;
+  --paper-ink: #1c1b18;
+}
+.dark {
+  --accent: #5aa9e6;
+  --paper: #1e1e1c;
+  --paper-ink: #f1efe9;
+}
+
+.accent-text { color: var(--accent); }
+.accent-tile {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 14%, transparent);
+}
+
+/* The one big action on a card wears the accent. */
+.primary-btn { background: var(--accent); color: #fff; }
+.primary-btn:hover { background: color-mix(in oklab, var(--accent) 88%, black); }
+
+/* ── Shell: sidebar on wide screens, a scrollable bar on narrow ones ────────────────────────────────────────── */
+.app-nav {
+  display: flex; flex-direction: column;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklab, var(--muted) 40%, var(--background));
+}
+@container (min-width: 48rem) {
+  .app-nav { border-bottom: 0; border-right: 1px solid var(--border); }
+}
+.nav-item {
+  position: relative; display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 8px 12px 8px 8px; border-radius: 14px; font-size: 15px; font-weight: 500; white-space: nowrap;
+  color: var(--muted-foreground); transition: background 0.15s, color 0.15s;
+}
+.nav-item:hover { background: color-mix(in oklab, var(--accent) 8%, transparent); color: var(--foreground); }
+.nav-item[aria-current='page'] {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--accent) 12%, var(--background));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 28%, transparent);
+}
+.nav-item[aria-current='page'] .accent-tile { color: #fff; background: var(--accent); }
+.nav-hint { font-size: 12px; font-weight: 400; color: var(--muted-foreground); }
+.nav-badge {
+  margin-left: auto; min-width: 20px; padding: 0 6px; border-radius: 9999px; text-align: center;
+  font-size: 11px; font-weight: 600; line-height: 20px; font-variant-numeric: tabular-nums;
+  color: #fff; background: var(--accent);
+}
+.nav-badge.is-urgent { background: var(--status-critical); }
+.brand-mark {
+  display: inline-grid; place-items: center; color: #fff;
+  background: linear-gradient(135deg, #0a4f9a, #2a9df4);
+}
+
+/* ── Content ───────────────────────────────────────────────────────────────────────────────────────────────── */
+.page { max-width: 46rem; }
+
+/* A post, on paper: warm white, generous line height, the size LinkedIn shows it at. */
+.post-paper {
+  padding: 24px 26px; border-radius: 18px;
+  background: var(--paper); color: var(--paper-ink);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -16px rgb(0 0 0 / 0.25);
+}
+.post-text { white-space: pre-line; font-size: 16px; line-height: 1.65; }
+
+.fold-toggle {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
+  color: var(--muted-foreground);
+}
+.fold-toggle:hover { color: var(--foreground); }
+
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+.pill-draft { color: var(--foreground); background: color-mix(in oklab, var(--accent) 14%, transparent); }
+.pill-posted { color: #fff; background: var(--status-good); }
+.pill-rejected { color: #fff; background: var(--status-critical); }
+.pill-expired { color: var(--muted-foreground); background: var(--muted); }
+
+/* Soft callouts: the morning greeting, an "improved" result. */
+.callout { border-radius: 20px; padding: 24px 26px; background: var(--accent-soft); }
+
+/* Quiet rows (sources, automations). */
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+.row:last-child { border-bottom: 0; }
+.dot { width: 9px; height: 9px; border-radius: 9999px; flex-shrink: 0; }

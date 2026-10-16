@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "linkedin-desk",
+      "runtimeExecutable": "lua",
+      "runtimeArgs": [
+        "apps",
+        "dev",
+        "linkedin-desk",
+        "--port",
+        "5175"
+      ],
+      "port": 5175
+    }
+  ]
+}

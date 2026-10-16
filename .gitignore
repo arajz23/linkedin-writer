@@ -1,0 +1,11 @@
+node_modules
+dist/
+dist-v2/
+.env
+.env.*
+.lua/
+lua.skill.yaml
+src/knowledge/owner.ts
+scripts/.import-state.json
+scripts/__pycache__/
+.DS_Store

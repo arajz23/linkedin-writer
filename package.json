@@ -1,0 +1,24 @@
+{
+  "name": "marko-linkedin",
+  "version": "1.0.0",
+  "description": "Marko Reis's LinkedIn writer on Lua",
+  "license": "ISC",
+  "author": "marko@heylua.ai",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "lua-cli": "^3.53.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.9.2"
+  }
+}
