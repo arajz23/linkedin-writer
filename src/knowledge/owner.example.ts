@@ -27,7 +27,7 @@ export const OWNER = {
     { key: 'take', name: 'AI news, my take', brief: 'One story from this week and what it means for a real business. A clear opinion, a concrete consequence, not a summary.' },
     { key: 'building', name: 'Building', brief: 'One thing we can now do, or one thing learned shipping it, explained to an operator with the real problem it solves. Never a feature list.' },
     { key: 'field', name: 'From the field', brief: 'A lesson from a client implementation, a deal or a demo. Anonymise the client unless the story is already public.' },
-    { key: 'people', name: 'Leading', brief: 'Hiring, building a team, running a company, a mistake and what it taught. Only real facts from the owner\'s own notes; never invented personal detail.' },
+    { key: 'people', name: 'Personal', brief: "Saturday's slot, and the one only the owner can write: something built or decided first-hand (what it does, how it was built, what it took, what changed), views on the work, a lesson learned, a mistake. Built on the owner's own notes; never invented personal detail." },
   ] as const,
 
   // Hashtags the writer leans on, lower key. Three to five per post, usually two from here.

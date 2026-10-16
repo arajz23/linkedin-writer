@@ -16,7 +16,7 @@ const gather = createStep({
   id: 'gather',
   inputSchema: z.object({ pillar: z.string().optional(), note: z.string().optional() }).passthrough(),
   outputSchema: z.object({
-    date: z.string(), weekday: z.string(), pillar: z.string(), note: z.string(),
+    date: z.string(), weekday: z.string(), pillar: z.string(), strict: z.boolean(), pillarInstruction: z.string(), note: z.string(),
     storiesText: z.string(), seedsText: z.string(), profileText: z.string(), notesText: z.string(), exemplarsText: z.string(), recentText: z.string(),
     storyIds: z.array(z.string()), seedIds: z.array(z.string()),
   }),
@@ -25,7 +25,13 @@ const gather = createStep({
     const date = todayLocal();
     const weekday = weekdayLocal();
     const dow = new Date(`${date}T12:00:00Z`).getUTCDay();
-    const pillar = ctx.inputData.pillar || PILLAR_BY_WEEKDAY[dow] || 'take';
+    // Saturday is the personal slot: the pillar is forced, not just led with. A steer from the owner can force any pillar.
+    const forced = ctx.inputData.pillar || (dow === 6 ? 'people' : undefined);
+    const pillar = forced || PILLAR_BY_WEEKDAY[dow] || 'take';
+    const p = PILLARS.find((x) => x.key === pillar);
+    const pillarInstruction = forced
+      ? `Today every angle must be from the pillar "${p?.name ?? pillar}" (${p?.brief ?? ''}). This is the personal slot: build on ${OWNER.first}'s seeds and on what he has built, decided or seen; a news story may appear only as a backdrop to his own experience. Angles from other pillars are disqualified.`
+      : `Today's lead pillar is "${p?.name ?? pillar}": give it at least 3 angles, and spread the rest across the other pillars when the material is there.`;
     const [stories, seeds, profile, notes, examples, recent] = await Promise.all([
       topStories(4, 55, 14), unusedSeeds(12), latestProfile(), activeNotes(), exemplars(6), recentPosts(21, 80),
     ]);
@@ -33,7 +39,7 @@ const gather = createStep({
     const seedsOut = seeds.map((s) => ({ id: s.id, kind: s.data.kind, at: s.data.at.slice(0, 10), title: s.data.title, url: s.data.url, text: s.data.text.slice(0, 2500) }));
     const recentOut = recent.filter((p) => p.data.status !== 'expired').map((p) => ({ date: p.data.date, status: p.data.status, topic: p.data.topic, hook: p.data.hook, rejectReason: p.data.rejectReason, editRatio: p.data.editRatio }));
     return {
-      date, weekday, pillar, note: ctx.inputData.note ?? '',
+      date, weekday, pillar, strict: !!forced, pillarInstruction, note: ctx.inputData.note ?? '',
       storiesText: capJson(storiesOut, 40_000),
       seedsText: capJson(seedsOut, 16_000),
       profileText: profile ? JSON.stringify({ summary: profile.summary, rules: profile.rules, hooksThatWork: profile.hooksThatWork, hooksToAvoid: profile.hooksToAvoid, structure: profile.structure, vocabulary: profile.vocabulary, learnings: profile.learnings.slice(0, 8) }).slice(0, 9000) : '',
@@ -100,7 +106,7 @@ Audience: ${AUDIENCE}
 His learned voice profile (JSON, may be empty): ${g.profileText || 'none yet'}
 His standing notes: ${g.notesText}
 His recent posts and what happened to them (JSON; avoid repeats, learn from rejections): ${g.recentText}
-Today leads with the pillar "${g.pillar}" but a clearly better angle from another pillar wins.
+${g.strict ? `Today only angles from the pillar "${g.pillar}" count: score any other pillar 0 total and say why in the note.` : `Today leads with the pillar "${g.pillar}" but a clearly better angle from another pillar wins.`}
 
 Score each angle 0 to 10 on: memorable (would someone repeat the line to a colleague), specific (a real detail, number or event, not a theme), voice (sounds like ${OWNER.first}, an operator, not a thought leader), fresh (not what everyone else posts this week, not a repeat of his recent topics), audience (useful to this audience: ${AUDIENCE}). total is a 0 to 100 judgement, not a sum. Penalise anything that relies on an invented fact, names a client without public approval, or needs ${OWNER.first} to fill more than two blanks. Rank best first. Note is one line, plain words, no em dashes. Answer with JSON only.`,
       prompt: `Angles (JSON):\n${JSON.stringify(angles.map((a, i) => ({ i, ...a })))}`,
@@ -279,7 +285,7 @@ export const dailyDraft = createWorkflow({
     toolScope: {},
     retry: { maxAttempts: 2 },
     outputSchema: anglesSchema,
-    prompt: template(`Background job (no one is chatting with you). It is \${stepResults.gather.weekday} \${stepResults.gather.date}. Find 6 to 8 possible angles for today's LinkedIn post by ${OWNER.first}. Today's lead pillar is "\${stepResults.gather.pillar}": give it at least 3 angles, and spread the rest across the other pillars when the material is there.
+    prompt: template(`Background job (no one is chatting with you). It is \${stepResults.gather.weekday} \${stepResults.gather.date}. Find 6 to 8 possible angles for today's LinkedIn post by ${OWNER.first}. \${stepResults.gather.pillarInstruction}
 The four pillars (use these keys): ${PILLARS.map((p) => `${p.key} = "${p.name}": ${p.brief}`).join(' / ')}
 \${stepResults.gather.note}
 
