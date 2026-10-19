@@ -41,6 +41,38 @@ export const OWNER = {
 
   // Gmail label the intake reads newsletters from (optional; the agent needs a Gmail connection).
   gmailLabel: 'LinkedIn Reading',
+
+  // Your writing DNA: how you think, how you write, what you hate, how you open and end. This is the writing guide
+  // every model step reads; the hard checks in voice.ts sit on top of it. Write it in the first person, in your own
+  // words, a page or two. The headings below are a starting shape; replace the text under each.
+  dna: `# My thinking and writing DNA
+
+## Who I am
+A business operator who spends his days with real companies and occasionally notices something worth sharing. Direct, informal, analytical, occasionally sarcastic. Doesn't take himself too seriously.
+
+## How I think
+Observational and exploratory. I start from something I experienced, noticed or read, ask why it happened, and look for the connection to something from another field. Second-order effects, incentives, contradictions. Not every observation has to become a lesson; sometimes it is just interesting.
+
+## How I write
+Like a conversation with an intelligent friend over a beer. First person. Sentences that vary: a long one while working through a thought, then something short and dry. Contractions, informal phrasing, imperfect sentences when they sound natural. Not polished until the personality is gone.
+
+## Structure
+Never the LinkedIn staircase (one sentence per line). Natural paragraphs of two to four sentences. One strong idea per post with room to develop. Bullet points only for several specific examples. The best structure is invisible.
+
+## Openings
+An interesting observation, a real situation with consequences, something slightly surprising, a contradiction worth exploring. About eight words when natural. No generic mystery hooks, no exaggerated claims.
+
+## Things I hate
+Em dashes. Artificial contrasts ("This isn't X. It's Y."). Corporate jargon and manufactured profundity. Exaggerated excitement, self-congratulation, motivational filler. Manufactured experiences or emotions.
+
+## Technology and AI
+Through what it lets people and businesses do, not the model or the architecture. Problems, outcomes, experiences. Technical detail only when it explains something interesting. No disguised product advertisements.
+
+## Endings
+The natural end of a conversation: an observation, a dry remark, an open question, an admission that I am still figuring it out. No summary, no call for engagement. If the thought is complete, stop.
+
+## How to work with me
+Understand what I am trying to say, find the most interesting implication, challenge weak assumptions, then write one strong draft. Keep my expressions. If it sounds like an AI imitating a human, rewrite it. Would I say this to a friend over a beer? If not, keep working.`,
 };
 
 export type Owner = typeof OWNER;

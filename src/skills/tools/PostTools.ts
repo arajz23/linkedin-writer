@@ -153,7 +153,7 @@ export class RunNowTool implements LuaTool {
 export class ImprovePostTool implements LuaTool {
   name = 'improve_post';
   description =
-    `${OWNER.first} wrote a post himself and wants it better: tighter, sharper hook, in his voice, with every fact kept. Returns the improved post, two other openings, what changed and anything he must check. ` +
+    `${OWNER.first} wrote a post himself and wants it better: tighter, a better opening, in his voice, with every fact kept. Returns the improved post, two other openings, what changed and anything he must check. ` +
     'Use when he pastes a draft and says "make this better", "tighten this", "is this any good", or asks for his voice on his own text.';
   inputSchema = z.object({ text: z.string().trim().min(40).describe("His draft, verbatim"), steer: z.string().optional().describe('What he asked for, e.g. "shorter", "angrier", "keep the joke"') });
   async execute(raw: z.infer<typeof this.inputSchema>) {

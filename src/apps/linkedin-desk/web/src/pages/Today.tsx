@@ -89,7 +89,7 @@ function DraftCard({ post, onDone, onAsk }: { post: PostRow; onDone: (m: string)
           </div>
           <div className="flex flex-wrap gap-2">
             <CopyButton text={full} />
-            <Button variant="ghost" size="sm" onClick={() => onAsk(`Rewrite post ${post.rank} ("${post.topic}"). Keep my voice; make the hook sharper and the whole thing tighter. Give me the full post.`)}><ChatCircleText /> Ask for a rewrite</Button>
+            <Button variant="ghost" size="sm" onClick={() => onAsk(`Rewrite post ${post.rank} ("${post.topic}"). Keep my voice; give it a better opening and make the whole thing tighter. Give me the full post.`)}><ChatCircleText /> Ask for a rewrite</Button>
           </div>
           {mode === 'edited' && (
             <div className="space-y-2">

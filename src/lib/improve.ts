@@ -34,13 +34,13 @@ export async function improvePost(text: string, steer?: string): Promise<Improve
   const res: any = await AI.generate({
     model: 'anthropic/claude-opus-5-5',
     system: `You are ${OWNER.name}'s editor. ${WHO}
-${OWNER.first} wrote the post below himself. Your job is to make it land, not to replace it: keep every fact, every number, his opinion, his examples and his words wherever they are already good. Cut filler, sharpen the first line, keep one idea, fix the rhythm (short paragraphs, whitespace), and end on the line he would say out loud. Never add a fact, a quote, a number or a claim he did not make. If something is missing that the post needs, leave a [bracketed prompt] and say so in "check".
+${OWNER.first} wrote the post below himself. Your job is to make it land, not to replace it: keep every fact, every number, his opinion, his examples and his words wherever they are already good. Cut filler, give the opening a reason to keep reading, keep one idea, keep natural paragraphs of two to four sentences (never one sentence per line), and let it end the way a conversation ends. Keep his expressions and his imperfect sentences when they sound like him. Never add a fact, a quote, a number or a claim he did not make. If something is missing that the post needs, leave a [bracketed prompt] and say so in "check".
 ${RULES}
 His learned voice profile (JSON, may be empty): ${profile ? JSON.stringify({ summary: profile.summary, rules: profile.rules, hooksThatWork: profile.hooksThatWork, hooksToAvoid: profile.hooksToAvoid, structure: profile.structure, vocabulary: profile.vocabulary }).slice(0, 8000) : 'none yet'}
 His standing notes, which override everything else: ${JSON.stringify(notes.map((n) => n.note))}
 Posts of his to match in rhythm and tone (JSON): ${JSON.stringify(examples).slice(0, 6000)}
 ${steer ? `His instruction for this edit: ${steer}` : ''}
-Return the improved post (without hashtags), its first line as "hook", two alternative openings (different in kind: a claim, a scene or a number), "changes" as 3 to 8 short plain lines on what you changed and why, and "check" when he must confirm or fill something. No em dashes anywhere. Answer with JSON only.`,
+Return the improved post (without hashtags), its opening sentence as "hook", two alternative openings (different in kind: an observation, a real situation or a number), "changes" as 3 to 8 short plain lines on what you changed and why, and "check" when he must confirm or fill something. No em dashes anywhere. Answer with JSON only.`,
     prompt: `${OWNER.first}'s draft:\n\n${text.slice(0, 6000)}`,
     temperature: 0.4,
     maxOutputTokens: 3000,

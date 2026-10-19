@@ -55,7 +55,7 @@ const gather = createStep({
 const angleSchema = z.object({
   topic: z.string().describe('The specific topic in a few words'),
   angle: z.string().describe(`The memorable take in one sentence: what ${OWNER.first} says that a summary would not`),
-  hook: z.string().describe('The first line of the post, under 15 words'),
+  hook: z.string().describe('The opening line of the post: an observation, a real situation, something slightly surprising; about 8 to 15 words'),
   pillar: z.enum(['take', 'building', 'field', 'people']),
   whyOwner: z.string().describe(`One line: why only ${OWNER.first} can write this (what he has lived, seen or sold)`),
   materialIds: z.array(z.string()).describe('ids of the stories and seeds this draws on'),
@@ -131,9 +131,9 @@ const writtenSchema = z.object({
     topic: z.string(),
     angle: z.string(),
     pillar: z.enum(['take', 'building', 'field', 'people']),
-    hook: z.string().describe('First line, under 15 words'),
-    altHooks: z.array(z.string()).length(2).describe('Two different openings for the same post, each under 15 words'),
-    draft: z.string().describe('The full post, ready to paste, hook as the first line, hashtags not included'),
+    hook: z.string().describe('The opening sentence as it appears in the draft'),
+    altHooks: z.array(z.string()).length(2).describe('Two different openings for the same post: one an observation, one a real situation or a number'),
+    draft: z.string().describe('The full post, ready to paste, in natural paragraphs of two to four sentences, hashtags not included'),
     hashtags: z.array(z.string()).min(3).max(5).describe('without the # sign'),
     visual: z.string().describe('One line: an image, screenshot or chart idea, or "none"'),
     check: z.string().optional().describe(`What ${OWNER.first} must check or fill before posting; omit when nothing`),
@@ -177,11 +177,11 @@ const polish = createStep({
     try {
       const res: any = await AI.generate({
         model: 'anthropic/claude-opus-5-5',
-        system: `You are ${OWNER.name}'s editor. Keep his meaning, his opinion and his facts exactly; change only what the rules or his voice profile demand, and cut anything that sounds like every other LinkedIn post. Tighten, don't rewrite. Keep the hook as the first line.
+        system: `You are ${OWNER.name}'s editor. Keep his meaning, his opinion and his facts exactly; change only what the rules or his voice profile demand, and cut anything that sounds like every other LinkedIn post. Tighten, don't rewrite. Keep the opening sentence. If the draft reads like a LinkedIn staircase (one sentence per line), merge the lines into natural paragraphs of two to four sentences; that is the most important fix.
 ${RULES}
 Voice profile (JSON, may be empty): ${g.profileText || 'none yet'}
 ${OWNER.first}'s standing notes: ${g.notesText}
-Return each post's full text (without hashtags), its hook, and one line on what you changed. No em dashes anywhere, including in "changes". Answer with JSON only.`,
+Return each post's full text (without hashtags), its opening sentence as "hook", and one line on what you changed. No em dashes anywhere, including in "changes". Answer with JSON only.`,
         prompt: `Posts (JSON, with the mechanical lint findings to fix):\n${JSON.stringify(posts.map((p) => ({ rank: p.rank, hook: p.hook, draft: p.draft, lint: p.lint })))}`,
         temperature: 0.3,
         maxOutputTokens: 4000,
@@ -322,7 +322,7 @@ Audience: ${AUDIENCE}
 
 ${RULES}
 
-For each post also give two alternative openings (different in kind: one a claim, one a scene or a number), a visual idea, and a "check" with anything ${OWNER.first} must confirm or fill before posting. At most two [bracketed prompts] per post: if an angle needs more than ${OWNER.first} has given, write the post around what is known (the story, the general pattern he has seen) and leave one bracket for his example. Don't call any tools, just write.
+Write in natural paragraphs of two to four sentences, never one sentence per line. For each post also give two alternative openings (different in kind: one an observation, one a real situation or a number), a visual idea, and a "check" with anything ${OWNER.first} must confirm or fill before posting. At most two [bracketed prompts] per post: if an angle needs more than ${OWNER.first} has given, write the post around what is known (the story, the general pattern he has seen) and leave one bracket for his example. Don't call any tools, just write.
 Reply with one JSON object only, no prose before or after: {"posts": [{"rank" (1 or 2), "topic", "angle", "pillar", "hook", "altHooks" (exactly 2), "draft" (the full post without hashtags), "hashtags" (3 to 5, no # sign), "visual", "check" (optional), "sources", "materialIds"}]}.`),
   })
   .then(polish)

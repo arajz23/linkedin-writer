@@ -63,7 +63,7 @@ export function Voice({ data, reload, say, ask }: PageProps) {
 
       <section className="space-y-2">
         <h2 className="text-xl font-semibold">Always on</h2>
-        <p className="text-sm text-muted-foreground">Hook first, under 15 words. One idea, one opinion, one concrete detail. 100 to 220 words. No em dashes, no "not X but Y", no AI words, no listicles. Clients anonymous unless public. Nothing invented.</p>
+        <p className="text-sm text-muted-foreground">Your writing DNA (the dna field in owner.ts): natural paragraphs, never the staircase, an opening with a reason to keep reading, one idea given room, endings that just stop. Plus the hard checks: no em dashes, no "not X but Y", no AI words, clients anonymous unless public, nothing invented.</p>
       </section>
     </>
   );
