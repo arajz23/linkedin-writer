@@ -1,7 +1,7 @@
 import { LuaTool, Data } from 'lua-cli';
 import { z } from 'zod';
 import { parseInput } from '../../lib/guards';
-import { NOTES, SEEDS, activeNotes, latestProfile, topStories, unusedSeeds, exemplars } from '../../lib/store';
+import { NOTES, PROPOSALS, SEEDS, activeNotes, latestProfile, openProposals, topStories, unusedSeeds, exemplars } from '../../lib/store';
 import { RULES } from '../../knowledge/voice';
 import { OWNER } from '../../knowledge/owner';
 
@@ -58,13 +58,36 @@ export class GetVoiceProfileTool implements LuaTool {
   description = `${OWNER.first}'s learned voice profile (from the weekly review of his posts, edits and rejections), his standing notes and the posts to imitate. Call before writing or rewriting any post in chat, and when ${OWNER.first} asks what you've learned about his voice.`;
   inputSchema = z.object({});
   async execute() {
-    const [profile, notes, examples] = await Promise.all([latestProfile(), activeNotes(), exemplars(4, 900)]);
+    const [profile, notes, examples, proposals] = await Promise.all([latestProfile(), activeNotes(), exemplars(4, 900), openProposals()]);
     return {
       standingRules: RULES,
+      proposalsWaiting: proposals.map((p, i) => ({ n: i + 1, id: p.id, rule: p.data.rule, why: p.data.why })),
       notes: notes.map((n) => ({ at: n.at.slice(0, 10), note: n.note })),
       profile: profile ? { reviewedAt: profile.at.slice(0, 10), sampleSize: profile.sampleSize, summary: profile.summary, rules: profile.rules, hooksThatWork: profile.hooksThatWork, hooksToAvoid: profile.hooksToAvoid, structure: profile.structure, vocabulary: profile.vocabulary, learnings: profile.learnings.slice(0, 8) } : null,
       note: profile ? undefined : 'No voice review yet. Import past posts (scripts/import_linkedin_posts.py) or wait for the first Sunday review; until then the standing rules and notes apply.',
       exemplars: examples,
     };
+  }
+}
+
+export class DecideProposalTool implements LuaTool {
+  name = 'decide_proposal';
+  description =
+    'Accept or decline a rule the monthly performance review proposed ("accept 1 and 3, decline 2"). Numbers refer to the order in get_voice_profile\'s proposalsWaiting. An accepted rule becomes a standing note the writer follows from the next draft.';
+  inputSchema = z.object({
+    n: z.number().int().min(1).optional().describe('The proposal number from proposalsWaiting'),
+    id: z.string().optional().describe('Or its id'),
+    decision: z.enum(['accepted', 'declined']),
+    note: z.string().optional().describe(`${OWNER.first}'s reason or tweak, in his words`),
+  });
+  async execute(raw: z.infer<typeof this.inputSchema>) {
+    const input = parseInput(this.inputSchema, raw);
+    const open = await openProposals();
+    const hit = input.id ? open.find((p) => p.id === input.id) : input.n ? open[input.n - 1] : undefined;
+    if (!hit) return { updated: false, error: 'No such open proposal. Call get_voice_profile for the list.' };
+    const decidedAt = new Date().toISOString();
+    await Data.update(PROPOSALS, hit.id, { status: input.decision, decidedAt, decisionNote: input.note });
+    if (input.decision === 'accepted') await Data.create(NOTES, { note: input.note?.trim() ? `${hit.data.rule} (${input.note.trim()})` : hit.data.rule, at: decidedAt, active: true, fromProposal: hit.id }, hit.data.rule);
+    return { updated: true, rule: hit.data.rule, decision: input.decision };
   }
 }

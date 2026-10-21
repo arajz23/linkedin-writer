@@ -13,6 +13,7 @@ Built for one person at a time. Everything personal lives in one file you keep o
 | Intake | 05:15, 11:15, 15:15, 20:15 daily | Reads every source (Substacks and blogs by feed, newsletters by Gmail label, Slack channels), scores each item 0 to 100 for "could this become a memorable post by you", files the good ones. |
 | Morning drafts | 06:30 Mon to Sat | From the scored stories and your own notes: 6 to 8 angles, an independent judge ranks them, the best two are written in full, polished, linted, saved and emailed. Post 1 is the recommendation, with two alternative openings each. |
 | One question | 17:30 weekdays | One specific question about your day, by email. Your two-line answer becomes material only you have. |
+| Numbers review | 08:00 on the 1st | Reads 90 days of posts against their numbers (pillar, opening, length, weekday, edits), emails a report and proposes 3 to 5 rules. Nothing applies until you accept a proposal on the Voice page or in chat. |
 | Voice review | 16:00 Sundays | Rebuilds the voice profile from what you posted (and how you edited the draft), rejected (and why), said in chat, imported from your history, and the numbers you reported. Emails you what changed. |
 | Dashboard | any time | "LinkedIn desk": today's drafts with Posted / I changed it / Not this one, a Write page that sharpens your own draft in your voice, a place for stories and links, your voice rules, past posts with their numbers, the reading list, and the chat docked beside it. |
 | Chat | any time | "post 1", "post 2 with opening B", paste what you posted, "no to 1, too generic", "rewrite 2 shorter", "that one got 4,000 impressions", "never open with a question", "add this Substack", send a link, "make this better", "write it now". Only the owner gets through. |
@@ -27,7 +28,7 @@ Every outcome is recorded by the chat tools and the dashboard, and read by the S
 - the text you actually posted, compared word by word with the draft;
 - the draft you rejected and your reason;
 - rules you state in passing ("fewer hashtags"), which apply from the next draft;
-- impressions, reactions and comments you report, and posts you star (the writer imitates starred posts);
+- impressions, reactions and comments, typed in, read off a screenshot of the post, or uploaded monthly from LinkedIn's analytics export (Posts page); posts you star (the writer imitates starred posts);
 - your past posts, imported once from a LinkedIn export;
 - your own drafts and what the Write page did to them.
 

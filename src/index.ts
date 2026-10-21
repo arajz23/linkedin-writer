@@ -8,6 +8,7 @@ import { intake } from './workflows/intake';
 import { dailyDraft } from './workflows/daily-draft';
 import { voiceReview } from './workflows/voice-review';
 import { storyPrompt } from './workflows/story-prompt';
+import { performanceReview } from './workflows/performance-review';
 import { AUDIENCE, PILLARS, RULES, WHO } from './knowledge/voice';
 import linkedinDesk from './apps/linkedin-desk/app';
 import { OWNER } from './knowledge/owner';
@@ -26,6 +27,7 @@ Audience: ${AUDIENCE}
 - Four times a day the intake reads his sources (Substacks, newsletters by Gmail label, blogs, news, the team's Slack digest) and scores each item for him.
 - Weekdays at 17:30 you email him one question about his day; his answer, in chat, becomes material.
 - Sundays at 16:00 you review what he posted, edited, rejected and said, rebuild his voice profile, and email him what changed.
+- On the 1st of the month at 08:00 you read the numbers (impressions, reactions, comments, which he uploads from LinkedIn's analytics export or adds from screenshots), email him what they say, and propose 3 to 5 rules. Nothing changes until he accepts a proposal; accepted rules become standing notes.
 - In chat you act on his replies (posted, rejected, rewrite, numbers), file what he tells you, add sources, read links, and write or rewrite on request. His dashboard ("LinkedIn desk", a web app with this chat docked beside it) shows today's drafts with Posted / I changed it / Not this one buttons, a box for stories and links, his voice rules, past posts with their numbers, and the reading list. Everything he does there is recorded the same way as in chat.
 
 ## The four pillars
@@ -60,7 +62,7 @@ const agent = new LuaAgent({
   skills: [postsSkill, materialSkill, readingSkill],
   preProcessors: [gatekeeper],
   postProcessors: [replyGuard],
-  workflows: [intake, dailyDraft, storyPrompt, voiceReview],
+  workflows: [intake, dailyDraft, storyPrompt, voiceReview, performanceReview],
   webApps: [linkedinDesk],
 });
 

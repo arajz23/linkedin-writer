@@ -10,6 +10,7 @@ export const POSTS = 'posts'; // every draft, what happened to it, the posted te
 export const VOICE = 'voice_profile'; // the learned voice profile, one entry per weekly review
 export const NOTES = 'voice_notes'; // rules ${OWNER.first} states in chat ("never open with a question"), applied at once
 export const PROMPTS = 'story_prompts'; // the daily questions already asked, so they don't repeat
+export const PROPOSALS = 'rule_proposals'; // rules the monthly performance review proposes; accepted ones become voice notes
 
 export type SourceKind = 'rss' | 'gmail-label' | 'slack';
 export interface Source {
@@ -80,7 +81,7 @@ export interface Post {
   postedAt?: string;
   postUrl?: string;
   rejectReason?: string;
-  metrics?: { impressions?: number; reactions?: number; comments?: number; reposts?: number; recordedAt: string };
+  metrics?: { impressions?: number; reactions?: number; comments?: number; reposts?: number; engagements?: number; recordedAt: string };
   favourite?: boolean;
   origin: 'agent' | 'import' | 'owner';
 }
@@ -101,6 +102,13 @@ export interface VoiceProfile {
 }
 
 export interface VoiceNote { note: string; at: string; active: boolean }
+
+export interface Proposal { rule: string; why: string; kind: string; status: 'proposed' | 'accepted' | 'declined'; at: string; reviewDate: string; sampleSize?: number; decidedAt?: string; decisionNote?: string }
+
+export async function openProposals(): Promise<{ id: string; data: Proposal }[]> {
+  const all = await allEntries<Proposal>(PROPOSALS, { status: 'proposed' }, 50);
+  return all.sort((a, b) => String(b.data.at).localeCompare(String(a.data.at)));
+}
 
 /** Every entry matching the filter, newest pages first is not guaranteed, so sort after. */
 export async function allEntries<T = any>(collection: string, filter: LuaQuery = {}, max = 500): Promise<{ id: string; data: T }[]> {

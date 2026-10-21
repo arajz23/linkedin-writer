@@ -36,6 +36,16 @@ export function Voice({ data, reload, say, ask }: PageProps) {
         )}
       </div>
 
+      {data && data.voice.proposals.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold">Proposed by the numbers review</h2>
+          <p className="text-sm text-muted-foreground">From the monthly review of your posts' numbers. Nothing applies until you accept it.</p>
+          <ul className="space-y-3">
+            {data.voice.proposals.map((p) => <ProposalRow key={p.id} proposal={p} onDone={(m) => { say(m); reload(); }} />)}
+          </ul>
+        </section>
+      )}
+
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">What I've learned</h2>
         {!p ? (
@@ -66,5 +76,26 @@ export function Voice({ data, reload, say, ask }: PageProps) {
         <p className="text-sm text-muted-foreground">Your writing DNA (the dna field in owner.ts): natural paragraphs, never the staircase, an opening with a reason to keep reading, one idea given room, endings that just stop. Plus the hard checks: no em dashes, no "not X but Y", no AI words, clients anonymous unless public, nothing invented.</p>
       </section>
     </>
+  );
+}
+
+function ProposalRow({ proposal, onDone }: { proposal: { id: string; rule: string; why: string; kind: string; reviewDate: string }; onDone: (m: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState('');
+  const decide = async (decision: 'accepted' | 'declined') => {
+    setBusy(true);
+    try { await lua.api('POST', `/proposals/${encodeURIComponent(proposal.id)}`, { decision, note: note || undefined }); onDone(decision === 'accepted' ? 'Accepted. Applies from the next draft.' : 'Declined.'); }
+    catch (e) { onDone((e as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <li className="callout space-y-2">
+      <p className="text-base font-medium">{proposal.rule}</p>
+      <p className="text-sm text-muted-foreground">{proposal.why}</p>
+      <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="A tweak or a reason (optional)" />
+      <div className="flex gap-2">
+        <Button size="sm" className="primary-btn" disabled={busy} onClick={() => decide('accepted')}>Accept</Button>
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => decide('declined')}>Decline</Button>
+      </div>
+    </li>
   );
 }

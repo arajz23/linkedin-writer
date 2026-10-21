@@ -23,7 +23,7 @@ export interface PostRow {
   postedAt?: string;
   postUrl?: string;
   rejectReason?: string;
-  metrics?: { impressions?: number; reactions?: number; comments?: number; reposts?: number; recordedAt: string };
+  metrics?: { impressions?: number; reactions?: number; comments?: number; reposts?: number; engagements?: number; recordedAt: string };
   favourite?: boolean;
   origin: 'agent' | 'import' | 'owner';
 }
@@ -45,9 +45,13 @@ export interface Summary {
   voice: {
     profile: { at: string; sampleSize: number; summary: string; rules: { rule: string; evidence: string; confidence: string }[]; hooksThatWork: string[]; hooksToAvoid: string[]; learnings: string[] } | null;
     notes: { at: string; note: string }[];
+    proposals: { id: string; rule: string; why: string; kind: string; reviewDate: string }[];
   };
   sources: SourceRow[];
   automations: AutomationRow[];
 }
 
 export interface Improved { original: string; improved: string; hook: string; altHooks: string[]; changes: string[]; check?: string; lint: string[] }
+
+export interface ReadPost { text: string; author?: string; date?: string; impressions?: number; reactions?: number; comments?: number; reposts?: number; confidence: 'high' | 'medium' | 'low'; note?: string }
+export interface MetricRow { url?: string; date?: string; impressions?: number; reactions?: number; comments?: number; reposts?: number; engagements?: number }

@@ -1,11 +1,13 @@
 import { Data, Workflows, defineWebApp, env, json, route } from 'lua-cli';
 import { z } from 'zod';
 import { todayLocal } from '../../lib/guards';
-import { POSTS, SEEDS, SOURCES, allEntries, activeNotes, editRatio, latestProfile, postSearchText, recentPosts, topStories, unusedSeeds, type Post, type Source } from '../../lib/store';
+import { NOTES, POSTS, PROPOSALS, SEEDS, SOURCES, allEntries, activeNotes, editRatio, latestProfile, openProposals, postSearchText, recentPosts, topStories, unusedSeeds, type Post, type Source } from '../../lib/store';
 import { AddSourceTool, ReadLinkTool } from '../../skills/tools/SourceTools';
 import { AddVoiceNoteTool, SaveSeedTool } from '../../skills/tools/MaterialTools';
 import { MarkPostedTool, RecordMetricsTool, RejectDraftTool, RunNowTool } from '../../skills/tools/PostTools';
 import { improvePost } from '../../lib/improve';
+import { importMetricRows } from '../../lib/analytics';
+import { readPostScreenshot, resolveRelativeDate } from '../../lib/screenshot';
 import { PILLAR_NAMES } from '../../knowledge/voice';
 import { OWNER } from '../../knowledge/owner';
 
@@ -29,12 +31,13 @@ const AUTOMATIONS = [
   { id: '22b08bf1-2475-4831-bde9-d8f0820b3937', name: 'intake', label: 'Reading the sources', schedule: '05:15, 11:15, 15:15, 20:15' },
   { id: 'd7198ad7-7c0d-499e-a1d8-c57b4e5d1200', name: 'story-prompt', label: 'One question', schedule: '17:30 weekdays' },
   { id: '6bc281ef-d790-492c-9835-2beca65e0429', name: 'voice-review', label: 'Voice review', schedule: 'Sundays 16:00' },
+  { id: '', name: 'performance-review', label: 'Numbers review', schedule: '1st of the month, 08:00' },
 ];
 
 async function health() {
   const runs: any[] = await Workflows.list({ limit: 100 } as any).catch(() => []);
   return AUTOMATIONS.map((a) => {
-    const mine = runs.filter((r) => r.workflowId === a.id).sort((x, y) => String(y.createdAt).localeCompare(String(x.createdAt)));
+    const mine = runs.filter((r) => (a.id && r.workflowId === a.id) || r.workflowName === a.name || r.name === a.name).sort((x, y) => String(y.createdAt).localeCompare(String(x.createdAt)));
     const last = mine[0];
     const lastOk = mine.find((r) => r.status === 'completed');
     return {
@@ -74,8 +77,8 @@ export default defineWebApp({
       handler: async ({ auth }) => {
         if (!isOwner(auth)) return forbidden();
         const today = todayLocal();
-        const [recent, stories, seeds, profile, notes, sources, automations] = await Promise.all([
-          recentPosts(45, 300), topStories(4, 55, 10), unusedSeeds(10), latestProfile(), activeNotes(), allEntries<Source>(SOURCES, { active: true }, 200), health().catch(() => []),
+        const [recent, stories, seeds, profile, notes, sources, automations, proposals] = await Promise.all([
+          recentPosts(45, 300), topStories(4, 55, 10), unusedSeeds(10), latestProfile(), activeNotes(), allEntries<Source>(SOURCES, { active: true }, 200), health().catch(() => []), openProposals().catch(() => []),
         ]);
         const agentDrafts = recent.filter((p) => p.data.origin === 'agent');
         // Today's drafts, or the newest day that has any, so the page is never empty after a missed morning.
@@ -97,6 +100,7 @@ export default defineWebApp({
           voice: {
             profile: profile ? { at: profile.at.slice(0, 10), sampleSize: profile.sampleSize, summary: profile.summary, rules: profile.rules, hooksThatWork: profile.hooksThatWork, hooksToAvoid: profile.hooksToAvoid, learnings: profile.learnings.slice(0, 6) } : null,
             notes: notes.map((n) => ({ at: n.at.slice(0, 10), note: n.note })),
+            proposals: proposals.map((p) => ({ id: p.id, rule: p.data.rule, why: p.data.why, kind: p.data.kind, reviewDate: p.data.reviewDate })),
           },
           sources: sources.map((e) => ({ id: e.id, name: e.data.name, kind: e.data.kind, where: e.data.url ?? e.data.label ?? e.data.channelId, lastRead: e.data.lastFetchAt, lastStatus: e.data.lastStatus, lastCount: e.data.lastCount })).sort((a, b) => a.name.localeCompare(b.name)),
           automations,
@@ -142,11 +146,11 @@ export default defineWebApp({
 
     'POST /posts': route({
       description: `A post ${OWNER.first} wrote himself (optionally improved here), posted`,
-      body: z.object({ text: z.string().min(40), original: z.string().optional(), date: z.string().optional(), favourite: z.boolean().default(false) }),
+      body: z.object({ text: z.string().min(40), original: z.string().optional(), date: z.string().optional(), favourite: z.boolean().default(false), postUrl: z.string().optional(), metrics: z.object({ impressions: z.number().int().min(0).optional(), reactions: z.number().int().min(0).optional(), comments: z.number().int().min(0).optional(), reposts: z.number().int().min(0).optional() }).optional() }),
       handler: async ({ body, auth }) => {
         if (!isOwner(auth)) return forbidden();
         const hook = body.text.split('\n')[0].slice(0, 160);
-        const post: Post = { at: new Date().toISOString(), date: body.date ?? todayLocal(), status: 'posted', pillar: 'unknown', topic: hook.slice(0, 80), angle: '', hook, altHooks: [], draft: body.text, finalText: body.text, hashtags: (body.text.match(/#\w+/g) ?? []).map((h) => h.slice(1)), sources: [], postedAt: new Date().toISOString(), favourite: body.favourite, origin: 'owner', editRatio: body.original ? editRatio(body.original, body.text) : 0, original: body.original };
+        const post: Post = { at: new Date().toISOString(), date: body.date ?? todayLocal(), status: 'posted', pillar: 'unknown', topic: hook.slice(0, 80), angle: '', hook, altHooks: [], draft: body.text, finalText: body.text, hashtags: (body.text.match(/#\w+/g) ?? []).map((h) => h.slice(1)), sources: [], postedAt: body.date ? `${body.date}T09:00:00.000Z` : new Date().toISOString(), favourite: body.favourite, origin: 'owner', editRatio: body.original ? editRatio(body.original, body.text) : 0, original: body.original, postUrl: body.postUrl?.trim() || undefined, metrics: body.metrics && Object.values(body.metrics).some((v) => v !== undefined) ? { ...body.metrics, recordedAt: new Date().toISOString() } : undefined };
         const e = await Data.create(POSTS, post, postSearchText(post));
         return { saved: true, id: e.id };
       },
@@ -208,9 +212,43 @@ export default defineWebApp({
       },
     }),
 
+    'POST /posts/from-image': route({
+      description: 'Reads a screenshot of a LinkedIn post: its text, date and the numbers on screen. Nothing is saved; the page shows what was read',
+      body: z.object({ image: z.string().min(100).max(6_000_000).describe('data:image/...;base64,...'), hint: z.string().optional() }),
+      handler: async ({ body, auth }) => {
+        if (!isOwner(auth)) return forbidden();
+        const r = await readPostScreenshot(body.image, body.hint);
+        return { ...r, date: resolveRelativeDate(r.date) };
+      },
+    }),
+
+    'POST /metrics/import': route({
+      description: "Rows from LinkedIn's analytics export, matched to posts by URL then by date; unknown posts become stubs",
+      body: z.object({ rows: z.array(z.object({ url: z.string().optional(), date: z.string().optional(), impressions: z.number().optional(), reactions: z.number().optional(), comments: z.number().optional(), reposts: z.number().optional(), engagements: z.number().optional(), text: z.string().optional() })).min(1).max(500) }),
+      handler: async ({ body, auth }) => {
+        if (!isOwner(auth)) return forbidden();
+        return importMetricRows(body.rows);
+      },
+    }),
+
+    'POST /proposals/:id': route({
+      description: 'Accept or decline a rule the monthly review proposed; accepted ones become standing notes',
+      params: z.object({ id: z.string().min(1) }),
+      body: z.object({ decision: z.enum(['accepted', 'declined']), note: z.string().optional() }),
+      handler: async ({ params, body, auth }) => {
+        if (!isOwner(auth)) return forbidden();
+        const e: any = await Data.getEntry(PROPOSALS, params.id).catch(() => null);
+        if (!e) return json({ message: 'No such proposal' }, 404);
+        const decidedAt = new Date().toISOString();
+        await Data.update(PROPOSALS, params.id, { status: body.decision, decidedAt, decisionNote: body.note?.trim() || undefined });
+        if (body.decision === 'accepted') await Data.create(NOTES, { note: body.note?.trim() ? `${e.data.rule} (${body.note.trim()})` : e.data.rule, at: decidedAt, active: true, fromProposal: params.id }, e.data.rule);
+        return { ok: true };
+      },
+    }),
+
     'POST /run': route({
       description: 'Start a run now: today\'s drafts (with an optional steer), the intake, or the voice review',
-      body: z.object({ what: z.enum(['draft', 'intake', 'review']), note: z.string().optional() }),
+      body: z.object({ what: z.enum(['draft', 'intake', 'review', 'performance']), note: z.string().optional() }),
       handler: async ({ body, auth }) => {
         if (!isOwner(auth)) return forbidden();
         const r = await new RunNowTool().execute({ what: body.what, note: body.note?.trim() || undefined });

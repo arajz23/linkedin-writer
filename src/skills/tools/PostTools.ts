@@ -135,18 +135,18 @@ export class RunNowTool implements LuaTool {
   name = 'run_now';
   description =
     'Start a background run now: "draft" writes today\'s two drafts (optionally with a steer or a forced pillar) and emails them in a few minutes; "intake" reads all sources now; ' +
-    `"review" rebuilds the voice profile. Use when ${OWNER.first} says "write it now", "read the news now", or "what have you learned, update your profile".`;
+    `"review" rebuilds the voice profile; "performance" runs the monthly numbers review now. Use when ${OWNER.first} says "write it now", "read the news now", "what have you learned, update your profile", or "what do the numbers say".`;
   inputSchema = z.object({
-    what: z.enum(['draft', 'intake', 'review']),
+    what: z.enum(['draft', 'intake', 'review', 'performance']),
     note: z.string().optional().describe(`draft: a steer in ${OWNER.first}'s words, e.g. "write about yesterday's demo, angry about slow procurement"`),
     pillar: z.enum(['take', 'building', 'field', 'people']).optional(),
   });
   async execute(raw: z.infer<typeof this.inputSchema>) {
     const input = parseInput(this.inputSchema, raw);
-    const name = input.what === 'draft' ? 'daily-draft' : input.what === 'intake' ? 'intake' : 'voice-review';
-    const payload = input.what === 'draft' ? { note: input.note, pillar: input.pillar } : input.what === 'intake' ? { days: 3 } : { days: 120 };
+    const name = input.what === 'draft' ? 'daily-draft' : input.what === 'intake' ? 'intake' : input.what === 'review' ? 'voice-review' : 'performance-review';
+    const payload = input.what === 'draft' ? { note: input.note, pillar: input.pillar } : input.what === 'intake' ? { days: 3 } : input.what === 'review' ? { days: 120 } : { days: 90 };
     const run: any = await Workflows.start(name, payload, { idempotencyKey: `${name}-${new Date().toISOString().slice(0, 16)}` } as any);
-    return { started: true, runId: run?.runId ?? run?.id, note: input.what === 'draft' ? `Two drafts will land in ${OWNER.first}'s email in 3 to 6 minutes.` : input.what === 'intake' ? 'Reading every source; new stories appear in list_material in a few minutes.' : 'The new profile and a report will be emailed in a few minutes.' };
+    return { started: true, runId: run?.runId ?? run?.id, note: input.what === 'draft' ? `Two drafts will land in ${OWNER.first}'s email in 3 to 6 minutes.` : input.what === 'intake' ? 'Reading every source; new stories appear in list_material in a few minutes.' : input.what === 'review' ? 'The new profile and a report will be emailed in a few minutes.' : 'The numbers report and any proposed rules will be emailed in a few minutes.' };
   }
 }
 
